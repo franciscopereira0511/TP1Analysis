@@ -46,7 +46,7 @@ function getPeaks(array:number[]){
 
     for(let j=0;j<44100;j++){
       if(array[i]>peakCondition){
-        console.log(array[i]);
+        //console.log(array[i]);
         peakCounter += 1;
         
       }
@@ -65,7 +65,7 @@ function getPeaks(array:number[]){
 
 
 
-readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\s2v5.wav").then((buffer) => {
+readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\ChopSuey.wav").then((buffer) => {
   return WavDecoder.decode(buffer);
 }).then(function(audioData) {
   console.log("ampliando 30%");
