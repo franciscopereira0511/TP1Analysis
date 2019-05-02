@@ -65,7 +65,7 @@ function getPeaks(array:number[]){
 
 
 
-readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\ChopSuey.wav").then((buffer) => {
+readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\s2.wav").then((buffer) => {
   return WavDecoder.decode(buffer);
 }).then(function(audioData) {
   console.log("ampliando 30%");
