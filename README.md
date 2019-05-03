@@ -1,2 +1,2 @@
-# alg2019
-Some examples for algorithms course
+# SongAnalysis
+Creating a program that operates on a wav archive.

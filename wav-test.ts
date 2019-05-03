@@ -29,13 +29,15 @@ function findMinMax(array:number[]) {
     let v = array[i];
     min = (v < min) ? v : min;
     max = (v > max) ? v : max;
+    console.log(max);
   }
+  console.log([min,max]);
   return [min, max];
 }
 
 function getPeaks(array:number[]){
-  console.log(array.length);
-  console.log(findMinMax(array));
+  console.log("Largo del array: " + array.length);
+  console.log("Minimo y Maximo: " + findMinMax(array));
   let peakCondition:number = findMinMax(array)[1]*0.75;
   console.log("Peak condition: "+ peakCondition);
   let result:number[] = [];
@@ -56,8 +58,6 @@ function getPeaks(array:number[]){
     result.push(peakCounter);
     peakCounter=0;
 
-    
-
   }
   console.log(result);
   return result;
@@ -65,7 +65,7 @@ function getPeaks(array:number[]){
 
 
 
-readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\s2.wav").then((buffer) => {
+readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\ChopSueySample.wav").then((buffer) => {
   return WavDecoder.decode(buffer);
 }).then(function(audioData) {
   console.log("ampliando 30%");
@@ -87,13 +87,11 @@ readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos
 
   //Para encontrar el average del array
   let values = audioData.channelData[0];
-  getPeaks(values);
+  //getPeaks(values);
 
-
-
-  let sum = values.reduce((previous: number, current: number) => current += previous);
-  let avg = sum / values.length;
-  //console.log(avg);
+  for(var k = 0; k<values.length; k++){
+    console.log(values[i]);
+  }
 
   // console.log("writing...");
   // WavEncoder.encode(audioData).then((buffer: any) => {
