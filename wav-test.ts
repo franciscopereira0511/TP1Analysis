@@ -87,11 +87,16 @@ function prepareComparison(s1Peaks:number[],s2Peaks:number[]){
 
   for(var i=0;i<s1Peaks.length-s2Peaks.length+1;i++){
     for(var j=0;j<s2Peaks.length;j++){
+      //Guarda el índice de inicio de S1 para en caso que haga match
+      if(j==0){
+        resultTemp.push(i);
+      }
       resultTemp.push(s1Peaks[i]);
       i++;
     }
     i-=s2Peaks.length;
     sumS1 = resultTemp.reduce((a, b) => a + b, 0);
+    sumS1 -= resultTemp[0]; 
 
     //Si la cantidad de picos del pedacito de S1 del tamaño de s2 es +-500 con respecto a la de s2, se agrega al resultado final
     if(sumS1-500 <= sumS2 && sumS2 <= sumS1+500){
@@ -106,11 +111,11 @@ function prepareComparison(s1Peaks:number[],s2Peaks:number[]){
   return result;
 }
 
-function compare(s1LikelyMatches:number[][],s2Peaks:number[],errorMargin:number){
+function match(s1LikelyMatches:number[][],s2Peaks:number[],errorMargin:number){
   var result:number[][] = [];
   for(var i=0; i<s1LikelyMatches.length;i++){
-    for(var j=0;j<s2Peaks.length;j++){
-      //Compara si al menos uno de los segundos matchea, permitiendo un margen de error determinado 
+    for(var j=1;j<s2Peaks.length;j++){
+      //Probabilidad: Compara si al menos uno de los segundos matchea, permitiendo un margen de error determinado 
       if(s1LikelyMatches[i][j]-errorMargin<s2Peaks[j]==s2Peaks[j]<s1LikelyMatches[i][j]+errorMargin){
         result.push(s1LikelyMatches[i]);
         break;
@@ -120,17 +125,36 @@ function compare(s1LikelyMatches:number[][],s2Peaks:number[],errorMargin:number)
   return result;
 }
 
-readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\ChopSuey.wav").then((buffer) => {
+function generarRelieves(s1:number[]){
+  var shapeLen:number = 0;
+  var result:any[][] = [];
+  var resultTemp:number[] = [];
+  for(let i=0; i<s1.length; i++){
+    resultTemp.push(s1[i]);
+
+    //Si pasa de positivo a negativo, se terminó la forma
+    if(Math.sign(s1[i])==1 && Math.sign(s1[i+1])==-1 && resultTemp.length>50){
+      result.push([resultTemp[0],"Forma",resultTemp.length]);
+    }
+    //Si pasa de negativo a positivo, inicia la forma
+    if(Math.sign(s1[i])==-1 && Math.sign(s1[i+1])==1){
+      resultTemp=[];
+      resultTemp.push(i);
+    }
+
+
+    
+  }
+
+  console.log(result);
+  return result;
+}
+
+readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\s1.wav").then((buffer) => {
   return WavDecoder.decode(buffer);
 }).then(function(audioDataS1) {
   console.log("ampliando 30%");
   const size = 20000;
-
-   //for(var i=0; i<audioData.channelData[0].length; i++) {
-     //audioData.channelData[1][i]+=audioData.channelData[0][i];
-     //audioData.channelData[0][i]*=20;
-     //audioData.channelData[0][i]+=0.000000259254;
-   //}
 
   for(var i=44100*5; i<44100*10; i++) {
     audioDataS1.channelData[0][i-44100*5] = audioDataS1.channelData[0][i];
@@ -140,7 +164,7 @@ readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos
     audioDataS1.channelData[0][i+44100*6] = audioDataS1.channelData[0][i];
   }
 
-  readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\ChopSueySample.wav").then((buffer) => {
+  readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\s2.wav").then((buffer) => {
     return WavDecoder.decode(buffer);
   }).then(function(audioDataS2) {
     //console.log("ampliando 30%");
@@ -155,7 +179,6 @@ readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos
     }
 
 
-  //Para encontrar el average del array
   let valuesS1 = audioDataS1.channelData[0];
   let peaksS1 = getPeaks(valuesS1);
 
@@ -163,11 +186,13 @@ readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos
   let peaksS2 = getPeaks(valuesS2);
 
   var s2Test = [20,305,424,1354];
-  var s1Test = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
-  console.log("Picos S2: ");
-  console.log(peaksS2);
-  console.log("Matches: ");
-  console.log(compare(prepareComparison(peaksS1,peaksS2),peaksS2,100));
+  var s1Test = [1,2,3,4,5,-6,7,8,9,10,11,12,-13,14,15];
+  //console.log("Picos S2: ");
+  //console.log(peaksS2);
+  //console.log("Matches: ");
+  //console.log(match(prepareComparison(peaksS1,peaksS2),peaksS2,100));
+
+  generarRelieves(valuesS1);
 
 });
 });
