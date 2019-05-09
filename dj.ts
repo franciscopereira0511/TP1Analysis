@@ -12,19 +12,21 @@ export class Dj {
     }
 
     public ranking(s1: number[][]) {
-        let right: number = 0;
-        let left: number = s1.length;
-        let pivot: number = Math.floor(Math.random() * left) + right;
-        let top10: number[] = [];
-        let section: number[][] = [];
-        for(var i = pivot-44100; i < pivot+44100; i++) {
-            section.push(s1[i]);
+        var section: number[][] = [];
+        var values: number[] = [];
+        for(let i = 0; i < 44100*2; i++) {
+            values.push(s1[0][i]);
         }
-        return this.rankingAux(s1, right, left,pivot, section);
+        section.push(values);
+        values = [];
+        for(let i = 0; i < 44100*2; i++) {
+            values.push(s1[1][i]);
+        }
+        section.push(values);
     }
 
-    private rankingAux(s1: number[][], right: number, left: number, pivot: number, section: number[][]) {
-
+    private rankingAux(s1: number[][], section:number[][]) {
+        
     }
 
     public match(s1LikelyMatches:number[][],s2Peaks:number[],errorMargin:number){
