@@ -1,7 +1,7 @@
 import {} from "./wav-test"
 
 export class Dj {
-    private mix: number[];
+    private mix: number[][];
 
     public constructor() {
         this.mix = [];
@@ -27,6 +27,67 @@ export class Dj {
 
     private rankingAux(s1: number[][], section:number[][]) {
         
+    }
+
+    private domix(top: number[][]){
+        this.mix.push([0,1]);
+        let isloop: boolean = true;
+        let channel: number = 0;
+        let silence: number = 0;
+        let sectionIndex: number = 0;
+        for(let i = 0; i < 30; i++) {
+            this.mix[0].push(silence);
+            this.mix[1].push(silence);
+            if(isloop) {
+                sectionIndex = Math.floor(Math.random()*top.length);
+                if(channel == 0) {
+                    this.mix[0].push(top[sectionIndex]);
+                    this.mix[0].push(top[sectionIndex]);
+                    this.mix[0].push(top[sectionIndex]);
+                    this.mix[1].push(silence);
+                    this.mix[1].push(silence);
+                    this.mix[1].push(silence);
+                    channel++;
+                } else if(channel == 1) {
+                    this.mix[0].push(silence);
+                    this.mix[0].push(silence);
+                    this.mix[0].push(silence);
+                    this.mix[1].push(top[sectionIndex]);
+                    this.mix[1].push(top[sectionIndex]);
+                    this.mix[1].push(top[sectionIndex]);
+                    channel++;
+                } else {
+                    this.mix[0].push(top[sectionIndex]);
+                    this.mix[0].push(top[sectionIndex]);
+                    this.mix[0].push(top[sectionIndex]);
+                    this.mix[1].push(top[sectionIndex]);
+                    this.mix[1].push(top[sectionIndex]);
+                    this.mix[1].push(top[sectionIndex]);
+                    channel = 0;
+                }
+            } else {
+                if(channel == 0) {
+                    this.mix[0].push(top[Math.floor(Math.random()*top.length)]);
+                    this.mix[0].push(top[Math.floor(Math.random()*top.length)]);
+                    this.mix[1].push(silence);
+                    this.mix[1].push(silence);
+                    channel++;
+                } else if(channel == 1) {
+                    this.mix[0].push(silence);
+                    this.mix[0].push(silence);
+                    this.mix[1].push(top[Math.floor(Math.random()*top.length)]);
+                    this.mix[1].push(top[Math.floor(Math.random()*top.length)]);
+                    channel++;
+                } else {
+                    this.mix[0].push(top[Math.floor(Math.random()*top.length)]);
+                    this.mix[0].push(top[Math.floor(Math.random()*top.length)]);
+                    this.mix[1].push(top[Math.floor(Math.random()*top.length)]);
+                    this.mix[1].push(top[Math.floor(Math.random()*top.length)]);
+                    channel = 0;
+                }
+            }
+
+        }
     }
 
     public match(s1LikelyMatches:number[][],s2Peaks:number[],errorMargin:number){
@@ -75,27 +136,32 @@ export class Dj {
     }
 
     public getPeaks(array:number[]){
+
         let positivePeakCondition:number = this.findMinMax(array)[1]*0.60;
         let negativePeakCondition:number = this.findMinMax(array)[0]*0.60;
-      
-        let result:number[] = [];
+        let result:any[][] = [];
         let peakCounter:number = 0;
+        let firstPeak:number = 0;
       
         //Recorre los puntos del array para hallar picos
         for(let i=0;i<array.length;i++){
-            //Divide los picos por segundo
-            for(let j=0;j<44100;j++){
-                if(array[i]<negativePeakCondition || array[i]>positivePeakCondition){
-                    peakCounter += 1;
-                }
-                i++;
+          //Divide los picos por segundo
+          for(let j=0;j<44100;j++){
+            if(j==0){
+              firstPeak = i;
             }
-            //Cada 44100 elementos (1 segundo) hace un push en el resultado para incluir la cantidad de picos en ese segundo
-            result.push(peakCounter);
-            peakCounter=0;
+            if(array[i]<negativePeakCondition || array[i]>positivePeakCondition){
+              peakCounter += 1;
+            }
+            i++;
+          }
+          //Cada 44100 elementos (1 segundo) hace un push en el resultado para incluir la cantidad de picos en ese segundo
+          result.push([peakCounter,firstPeak]);
+          peakCounter=0;
+          firstPeak=0;
         }
         return result;
-    }
+      }
 
     private findMinMax(array:number[]) {
         let min = array[0], max = array[0];
