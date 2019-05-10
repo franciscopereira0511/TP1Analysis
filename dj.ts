@@ -29,6 +29,14 @@ export class Dj {
         
     }
 
+    private pushmixL(value: number){
+        this.mix[0].push(value);
+    }
+
+    private pushmixR(value: number){
+        this.mix[1].push(value);
+    }
+
     private domix(top: number[][]){
         this.mix.push([0,1]);
         let isloop: boolean = true;
@@ -41,9 +49,9 @@ export class Dj {
             if(isloop) {
                 sectionIndex = Math.floor(Math.random()*top.length);
                 if(channel == 0) {
-                    this.mix[0].push(top[sectionIndex]);
-                    this.mix[0].push(top[sectionIndex]);
-                    this.mix[0].push(top[sectionIndex]);
+                    top[sectionIndex].forEach(this.pushmixL);
+                    top[sectionIndex].forEach(this.pushmixL);
+                    top[sectionIndex].forEach(this.pushmixL);
                     this.mix[1].push(silence);
                     this.mix[1].push(silence);
                     this.mix[1].push(silence);
@@ -52,39 +60,49 @@ export class Dj {
                     this.mix[0].push(silence);
                     this.mix[0].push(silence);
                     this.mix[0].push(silence);
-                    this.mix[1].push(top[sectionIndex]);
-                    this.mix[1].push(top[sectionIndex]);
-                    this.mix[1].push(top[sectionIndex]);
+                    top[sectionIndex].forEach(this.pushmixR);
+                    top[sectionIndex].forEach(this.pushmixR);
+                    top[sectionIndex].forEach(this.pushmixR);
                     channel++;
                 } else {
-                    this.mix[0].push(top[sectionIndex]);
-                    this.mix[0].push(top[sectionIndex]);
-                    this.mix[0].push(top[sectionIndex]);
-                    this.mix[1].push(top[sectionIndex]);
-                    this.mix[1].push(top[sectionIndex]);
-                    this.mix[1].push(top[sectionIndex]);
+                    top[sectionIndex].forEach(this.pushmixL);
+                    top[sectionIndex].forEach(this.pushmixL);
+                    top[sectionIndex].forEach(this.pushmixL);
+                    top[sectionIndex].forEach(this.pushmixR);
+                    top[sectionIndex].forEach(this.pushmixR);
+                    top[sectionIndex].forEach(this.pushmixR);
                     channel = 0;
                 }
+                isloop = false;
             } else {
                 if(channel == 0) {
-                    this.mix[0].push(top[Math.floor(Math.random()*top.length)]);
-                    this.mix[0].push(top[Math.floor(Math.random()*top.length)]);
+                    sectionIndex = Math.floor(Math.random()*top.length);
+                    top[sectionIndex].forEach(this.pushmixL);
+                    sectionIndex = Math.floor(Math.random()*top.length);
+                    top[sectionIndex].forEach(this.pushmixL);
                     this.mix[1].push(silence);
                     this.mix[1].push(silence);
                     channel++;
                 } else if(channel == 1) {
                     this.mix[0].push(silence);
                     this.mix[0].push(silence);
-                    this.mix[1].push(top[Math.floor(Math.random()*top.length)]);
-                    this.mix[1].push(top[Math.floor(Math.random()*top.length)]);
+                    sectionIndex = Math.floor(Math.random()*top.length);
+                    top[sectionIndex].forEach(this.pushmixR);
+                    sectionIndex = Math.floor(Math.random()*top.length);
+                    top[sectionIndex].forEach(this.pushmixR);
                     channel++;
                 } else {
-                    this.mix[0].push(top[Math.floor(Math.random()*top.length)]);
-                    this.mix[0].push(top[Math.floor(Math.random()*top.length)]);
-                    this.mix[1].push(top[Math.floor(Math.random()*top.length)]);
-                    this.mix[1].push(top[Math.floor(Math.random()*top.length)]);
+                    sectionIndex = Math.floor(Math.random()*top.length);
+                    top[sectionIndex].forEach(this.pushmixL);
+                    sectionIndex = Math.floor(Math.random()*top.length);
+                    top[sectionIndex].forEach(this.pushmixL);
+                    sectionIndex = Math.floor(Math.random()*top.length);
+                    top[sectionIndex].forEach(this.pushmixR);
+                    sectionIndex = Math.floor(Math.random()*top.length);
+                    top[sectionIndex].forEach(this.pushmixR);
                     channel = 0;
                 }
+                isloop = true;
             }
 
         }
@@ -146,7 +164,7 @@ export class Dj {
         //Recorre los puntos del array para hallar picos
         for(let i=0;i<array.length;i++){
           //Divide los picos por segundo
-          for(let j=0;j<44100;j++){
+          for(let j=0;j<44100*2;j++){
             if(j==0){
               firstPeak = i;
             }
