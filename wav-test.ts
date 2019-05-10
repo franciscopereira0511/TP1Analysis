@@ -6,18 +6,6 @@
  */
 
 
-//Dónde usar probabilidad
-//Usarlo para saber cuáles serán los puntos a comparar
-//Usarlo para saber cuál es la distribución de picos
-//Para saber secciones aproximadas
-//Paraa saber distribución de las formas que hayan
-
-//Qué puedo hacer con la información de los picos
-//Sacarle moods
-//Reducir con aproximaciones, por ejemplo no buscar 16%, sino entre 10-20
-//Encontrar un segundo que haga match con un segundo de S1
-//Fijar un porcentaje de aceptación al comparar. Definir si es 80% igual. 
-
 import * as fs from 'fs';
 // import { complex as fft } from 'fft';
 import * as WavEncoder from 'wav-encoder';
@@ -81,6 +69,8 @@ function getPeaks(array:number[]){
   return result;
 }
 
+
+
 function secondWithMostPeaks(peaks:number[][]){
   var result:number = 0;
   for(var i=0;i<peaks.length;i++){
@@ -113,42 +103,65 @@ function statisticsTable(peaks:number[][],rowRange:number){
   return result;
 }
 
-  function Comparator(a: number[], b: number[]) {
-    if (a[1] < b[1]) return -1;
-    if (a[1] > b[1]) return 1;
-    return 0;
-  }
-
-function match(s1StatisticsTable:any[][],s2StatisticsTable:any[][],errorMargin:number){
+function match(s1StatisticsTable:any[][],S2Peaks:any[][],errorMargin:number,iterations:number){
+  var S2start:number[] = S2Peaks[0];
+  var S2end:number[] = S2Peaks[S2Peaks.length-1];
+  var matchDistance:number = Math.abs(S2end[1]-S2start[1]); //Distancia entre el inicio y el final del sample
   var result:number[][] = [];
-  for(var i=0; i<s1StatisticsTable.length;i++){
-    for(var j=0;j<s2StatisticsTable.length;j++){
-      //Probabilidad: Compara si al menos uno de los segundos matchea, permitiendo un margen de error determinado 
-      if(s1StatisticsTable[i][0]-errorMargin <= s2StatisticsTable[j][0] == s2StatisticsTable[j][0] < s1StatisticsTable[i][0]-errorMargin){
-        result.push(s1StatisticsTable[i]);
-        break;
-      }
-    }
+  
+  //Obtengo valores aproximados al inicio de S2 de la tabla estadistica de S1
+  var startlikelyMatches:number[][];
+  if(S2start[0]<100){
+    startlikelyMatches=s1StatisticsTable[0];
   }
-  //result=result.sort(Comparator);
-  console.log(result);
-  return result;
+  else{
+    startlikelyMatches=s1StatisticsTable[Math.trunc(S2start[0]/100)];
+  }
+
+  //Obtengo valores aproximados al final de S2 de la tabla estadistica de S1
+  var endlikelyMatches:number[][];
+  if(S2end[0]<100){
+    endlikelyMatches=s1StatisticsTable[0];
+  }
+  else{
+    endlikelyMatches=s1StatisticsTable[Math.trunc(S2end[0]/100)];
+  }
+  console.log("Segundo inicial S2: ",S2start);
+  console.log("Posibles matches segundo inicial S1: ",startlikelyMatches);
+  console.log("Segundo final S2: ",S2end);
+  console.log("Posibles matches segundo final S1: ",endlikelyMatches);
+  console.log("Maximas iteraciones posibles: ", startlikelyMatches.length*endlikelyMatches.length);
+
+  var randomStart:number = 0;
+  var randomEnd:number = 0;
+  var endlikelyMatchesSave:number[][] = endlikelyMatches; //Guardo los posibles finales S1
+  var matchDistanceAspirant:number = 0; //Distancia entre punto 1 y punto 2 del posible match
+
+  //Ejecuto cantidad de iteraciones de MonteCarlo segun se ingresó
+  for(var k=0;k<startlikelyMatches.length; k++){
+    randomStart = Math.floor(Math.random() * Math.floor(startlikelyMatches.length)); //Agarra un valor random de posibles inicios de S1
+
+    for(var j=0; j<endlikelyMatches.length; j++){
+      randomEnd = Math.floor(Math.random() * Math.floor(endlikelyMatches.length));  //Agarra un indice random de los posibles finales S1
+      matchDistanceAspirant = Math.abs(endlikelyMatches[randomEnd][1]-startlikelyMatches[randomStart][1]);  //Posible distancia entre puntos de s1 que haría match
+ 
+      //Si la distancia del posible inicio y posible final de S1 calza con los de S1, hay match
+      console.log(matchDistanceAspirant-errorMargin, "<=", matchDistance, "<=", matchDistanceAspirant+errorMargin)
+      if(matchDistanceAspirant-errorMargin <= matchDistance && matchDistance <= matchDistanceAspirant+errorMargin){
+        result.push([endlikelyMatches[randomStart][1],endlikelyMatches[randomEnd][1]]) //Guarda el indice de inicio e indice de final de S1 que hizo match
+      }
+
+      iterations--; //Reduce iteraciones
+      console.log(result);
+      if(iterations==0) return result; //Si se acaban las iteraciones, deja de hacer comparaciones y retorna el resultado
+      endlikelyMatches.splice(randomEnd,1); //Quita el valor de los posibles inicios de S2 en S1
+    }
+    startlikelyMatches.splice(randomStart,1); //Quita el valor de los posibles inicios de S2 en S1
+    endlikelyMatches=endlikelyMatchesSave; //Recupera los posibles finales de S1 para probar con otro posible inicio
+  }
 }
 
-function getMatches(S1Matches:any[][]){
-  var resultTemp:any[]=[];
-  var result:any[][] = [];
-  for(var i=0; i<S1Matches.length ; i++){
-    //Si el siguiente índice es current+1, se extiende el largo del match
-    if( (S1Matches[i][1]+1) == S1Matches[i+1][1]){
-      resultTemp.push(S1Matches[i][1]);
-    }
-    else{
-      result.push(resultTemp);
-      resultTemp = [];
-    }
-  }
-}
+
 
 function generarRelieves(s1:number[]){
   var shapeLen:number = 0;
@@ -172,14 +185,8 @@ function generarRelieves(s1:number[]){
   return result;
 }
 
-//Define la forma segun el porcentaje de puntos que hay en cada altura. Puedo encontrar el punto más alto y comparar con los de los lados. 
-//Si hay mucha diferencia, es un pico, si no, es una meseta. Si el punto más alto está por debajo de 0.10, es un silencio. 
-function definirRelieve(resultTemp:number[]){
-  var max:number = findMinMax(resultTemp)[1];
-  //if(max<0.)
-}
 
-readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\ChopSuey.wav").then((buffer) => {
+readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\s1.wav").then((buffer) => {
   return WavDecoder.decode(buffer);
 }).then(function(audioDataS1) {
   console.log("ampliando 30%");
@@ -202,7 +209,7 @@ readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos
     });
   }
 
-  readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\ChopSueySample.wav").then((buffer) => {
+  readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\s2.wav").then((buffer) => {
     return WavDecoder.decode(buffer);
   }).then(function(audioDataS2) {
     //console.log("ampliando 30%");
@@ -225,17 +232,13 @@ readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos
   let valuesS2 = audioDataS2.channelData[0];
   let peaksS2 = getPeaks(valuesS2);
   
-
   var s2Test = [20,305,424,1354];
   var s1Test = [1,2,3,4,5,-6,7,8,9,10,11,12,-13,14,15];
-  //console.log("Picos S2: ");
-  //console.log(peaksS2);
-  //console.log("Matches: ");
-  //console.log(match(prepareComparison(peaksS1,peaksS2),peaksS2,100));
-  //generarRelieves(valuesS1);
+
   var s1table = statisticsTable(peaksS1,100);
-  var s2table = statisticsTable(peaksS2,100);
-  match(s1table,s2table,100);
+  //console.log(s1table);
+  console.log(peaksS2);
+  //console.log(match(s1table,peaksS2,88200,16));
   
 
   //generateWAV(audioDataS1.channelData[0],audioDataS1.channelData[1])
