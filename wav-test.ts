@@ -50,15 +50,7 @@ function findMinMax(array:number[]) {
   return [min, max];
 }
 
-function secondWithMostPeaks(peaks:number[][]){
-  var result:number = 0;
-  for(var i=0;i<peaks.length;i++){
-    if(peaks[i][0]>result){
-      result=peaks[i][0];
-    }
-  }
-  return result;
-}
+
 
 //Para hallar la cantidad de picos por segundo, siendo picos los puntos que están por encima del 60% del valor máximo y mínimo
 function getPeaks(array:number[]){
@@ -89,16 +81,23 @@ function getPeaks(array:number[]){
   return result;
 }
 
+function secondWithMostPeaks(peaks:number[][]){
+  var result:number = 0;
+  for(var i=0;i<peaks.length;i++){
+    if(peaks[i][0]>result){
+      result=peaks[i][0];
+    }
+  }
+  return result;
+}
 
-function statisticsTable(peaks:any[][],rows:number){
-  var result = Array(rows+1).fill([]);
+function statisticsTable(peaks:number[][],rowRange:number){
+
   var mostPeaks = secondWithMostPeaks(peaks)
-  var rowRange = Math.floor(mostPeaks/rows);
-  console.log(rowRange);
+  var rows:number = Math.floor(mostPeaks/rowRange)
+  var result:any[][] = Array(rows+1).fill(null).map(()=>([]));
   var resultIndex = 0;
 
-  //Recorre cada segundo de la lista de picos. En cada if se le suma a la fila de la tabla (dependiendo de la cantidad de picos del segundo) 
-  //En indice 0: la cantidad de picos, Indice 1: se agregan los indices de los picos que estaban en el segundo
   for(var i=0; i<peaks.length; i++){
     for(let minCondition=0; minCondition<mostPeaks; minCondition+=rowRange){
       if(minCondition <= peaks[i][0] && peaks[i][0] <= minCondition+rowRange){
@@ -108,68 +107,47 @@ function statisticsTable(peaks:any[][],rows:number){
       else{
         resultIndex+=1;
       }
-      
     }
-    console.log(result[0].length,result[1].length,result[2].length,result[3].length,result[4].length,result[5].length);
-    console.log("#####################");
     resultIndex=0;
-  }
-
-  //console.log(result[0]);
-  //console.log(result[1]);
-  //console.log(result[2]);
-  //console.log(result[3]);
-  console.log(result[4]);
-  //console.log(result[5]);
-
-}
-
-//Estadistica: Reducir las comparaciones a hacer para buscar match haciendo que 
-//solo se guarden las varianzas de S1 del tamaño del sample en que la cantidad de picos es +-500 que el sample 
-function prepareComparison(s1Peaks:number[],s2Peaks:number[]){
-  var result:number[][] = [];
-  var resultTemp:number[] = [];
-  var sumS2:number = s2Peaks.reduce((a, b) => a + b, 0);
-  var sumS1:number = 0;
-
-  for(var i=0;i<s1Peaks.length-s2Peaks.length+1;i++){
-    for(var j=0;j<s2Peaks.length;j++){
-      //Guarda el índice de inicio de S1 para en caso que haga match
-      if(j==0){
-        resultTemp.push(i);
-      }
-      resultTemp.push(s1Peaks[i]);
-      i++;
-    }
-    i-=s2Peaks.length;
-    sumS1 = resultTemp.reduce((a, b) => a + b, 0);
-    sumS1 -= resultTemp[0]; 
-
-    //Si la cantidad de picos del pedacito de S1 del tamaño de s2 es +-500 con respecto a la de s2, se agrega al resultado final
-    if(sumS1-500 <= sumS2 && sumS2 <= sumS1+500){
-      result.push(resultTemp);
-      resultTemp = [];
-    }
-    else{
-      resultTemp = [];
-    }
-
   }
   return result;
 }
 
-function match(s1LikelyMatches:number[][],s2Peaks:number[],errorMargin:number){
+  function Comparator(a: number[], b: number[]) {
+    if (a[1] < b[1]) return -1;
+    if (a[1] > b[1]) return 1;
+    return 0;
+  }
+
+function match(s1StatisticsTable:any[][],s2StatisticsTable:any[][],errorMargin:number){
   var result:number[][] = [];
-  for(var i=0; i<s1LikelyMatches.length;i++){
-    for(var j=1;j<s2Peaks.length;j++){
+  for(var i=0; i<s1StatisticsTable.length;i++){
+    for(var j=0;j<s2StatisticsTable.length;j++){
       //Probabilidad: Compara si al menos uno de los segundos matchea, permitiendo un margen de error determinado 
-      if(s1LikelyMatches[i][j]-errorMargin<s2Peaks[j]==s2Peaks[j]<s1LikelyMatches[i][j]+errorMargin){
-        result.push(s1LikelyMatches[i]);
+      if(s1StatisticsTable[i][0]-errorMargin <= s2StatisticsTable[j][0] == s2StatisticsTable[j][0] < s1StatisticsTable[i][0]-errorMargin){
+        result.push(s1StatisticsTable[i]);
         break;
       }
     }
   }
+  //result=result.sort(Comparator);
+  console.log(result);
   return result;
+}
+
+function getMatches(S1Matches:any[][]){
+  var resultTemp:any[]=[];
+  var result:any[][] = [];
+  for(var i=0; i<S1Matches.length ; i++){
+    //Si el siguiente índice es current+1, se extiende el largo del match
+    if( (S1Matches[i][1]+1) == S1Matches[i+1][1]){
+      resultTemp.push(S1Matches[i][1]);
+    }
+    else{
+      result.push(resultTemp);
+      resultTemp = [];
+    }
+  }
 }
 
 function generarRelieves(s1:number[]){
@@ -194,16 +172,12 @@ function generarRelieves(s1:number[]){
   return result;
 }
 
-
 //Define la forma segun el porcentaje de puntos que hay en cada altura. Puedo encontrar el punto más alto y comparar con los de los lados. 
 //Si hay mucha diferencia, es un pico, si no, es una meseta. Si el punto más alto está por debajo de 0.10, es un silencio. 
 function definirRelieve(resultTemp:number[]){
   var max:number = findMinMax(resultTemp)[1];
   //if(max<0.)
 }
-
-
-
 
 readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos\\alg2019-master\\ChopSuey.wav").then((buffer) => {
   return WavDecoder.decode(buffer);
@@ -250,6 +224,7 @@ readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos
 
   let valuesS2 = audioDataS2.channelData[0];
   let peaksS2 = getPeaks(valuesS2);
+  
 
   var s2Test = [20,305,424,1354];
   var s1Test = [1,2,3,4,5,-6,7,8,9,10,11,12,-13,14,15];
@@ -258,7 +233,11 @@ readFile("C:\\Users\\User\\Desktop\\Clases 5to Semestre\\Análisis de Algoritmos
   //console.log("Matches: ");
   //console.log(match(prepareComparison(peaksS1,peaksS2),peaksS2,100));
   //generarRelieves(valuesS1);
-  statisticsTable(peaksS1,5);
+  var s1table = statisticsTable(peaksS1,100);
+  var s2table = statisticsTable(peaksS2,100);
+  match(s1table,s2table,100);
+  
+
   //generateWAV(audioDataS1.channelData[0],audioDataS1.channelData[1])
 
 });
